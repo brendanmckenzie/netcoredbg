@@ -1,0 +1,92 @@
+name: Sync with Upstream
+
+on:
+  schedule:
+    # Check for new releases every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    name: Sync with Samsung upstream
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout fork
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/Samsung/netcoredbg.git || true
+          git fetch upstream --tags
+
+      - name: Check for new upstream releases
+        id: check_release
+        run: |
+          # Get latest upstream tag
+          LATEST_UPSTREAM=$(git describe --tags --abbrev=0 upstream/master 2>/dev/null || echo "")
+
+          # Get latest local tag
+          LATEST_LOCAL=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+          echo "Latest upstream: $LATEST_UPSTREAM"
+          echo "Latest local: $LATEST_LOCAL"
+
+          if [ -z "$LATEST_UPSTREAM" ]; then
+            echo "No upstream tags found"
+            echo "has_new_release=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          if [ "$LATEST_UPSTREAM" != "$LATEST_LOCAL" ]; then
+            echo "New release found: $LATEST_UPSTREAM"
+            echo "has_new_release=true" >> $GITHUB_OUTPUT
+            echo "new_tag=$LATEST_UPSTREAM" >> $GITHUB_OUTPUT
+          else
+            echo "Already up to date"
+            echo "has_new_release=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Merge upstream changes
+        if: steps.check_release.outputs.has_new_release == 'true'
+        run: |
+          # Merge upstream master into our master
+          git merge upstream/master --no-edit || {
+            echo "Merge conflict detected. Manual intervention required."
+            exit 1
+          }
+
+      - name: Push changes and tag
+        if: steps.check_release.outputs.has_new_release == 'true'
+        run: |
+          # Push merged changes
+          git push origin master
+
+          # Create and push the tag
+          git tag ${{ steps.check_release.outputs.new_tag }} || true
+          git push origin ${{ steps.check_release.outputs.new_tag }}
+
+      - name: Trigger release workflow
+        if: steps.check_release.outputs.has_new_release == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'build-and-release.yml',
+              ref: 'master',
+              inputs: {
+                create_release: 'true',
+                tag_name: '${{ steps.check_release.outputs.new_tag }}'
+              }
+            });
