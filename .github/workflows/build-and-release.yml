@@ -33,7 +33,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build clang
+          sudo apt-get install -y cmake clang
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -46,15 +46,14 @@ jobs:
           mkdir build
           cd build
           CC=clang CXX=clang++ cmake .. \
-            -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=$PWD/../bin
 
       - name: Build
         run: |
           cd build
-          ninja
-          ninja install
+          make
+          make install
 
       - name: Package artifacts
         run: |
@@ -83,7 +82,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install cmake ninja
+          brew install cmake
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -96,15 +95,14 @@ jobs:
           mkdir build
           cd build
           CC=clang CXX=clang++ cmake .. \
-            -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=$PWD/../bin
 
       - name: Build
         run: |
           cd build
-          ninja
-          ninja install
+          make
+          make install
 
       - name: Package artifacts
         run: |
@@ -118,11 +116,8 @@ jobs:
           path: netcoredbg-macos-${{ matrix.arch }}.tar.gz
 
   build-windows:
-    name: Build Windows (${{ matrix.arch }})
+    name: Build Windows (x64)
     runs-on: windows-latest
-    strategy:
-      matrix:
-        arch: [x64, x86, arm64]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -139,7 +134,7 @@ jobs:
           cd build
           cmake .. `
             -G "Visual Studio 17 2022" `
-            -A ${{ matrix.arch == 'x86' && 'Win32' || matrix.arch }} `
+            -A x64 `
             -DCMAKE_BUILD_TYPE=Release `
             -DCMAKE_INSTALL_PREFIX="$PWD\..\bin"
 
@@ -151,13 +146,13 @@ jobs:
       - name: Package artifacts
         run: |
           cd bin
-          Compress-Archive -Path * -DestinationPath ../netcoredbg-windows-${{ matrix.arch }}.zip
+          Compress-Archive -Path * -DestinationPath ../netcoredbg-windows-x64.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: netcoredbg-windows-${{ matrix.arch }}
-          path: netcoredbg-windows-${{ matrix.arch }}.zip
+          name: netcoredbg-windows-x64
+          path: netcoredbg-windows-x64.zip
 
   create-release:
     name: Create Release
@@ -202,7 +197,5 @@ jobs:
             artifacts/netcoredbg-macos-x64/netcoredbg-macos-x64.tar.gz
             artifacts/netcoredbg-macos-arm64/netcoredbg-macos-arm64.tar.gz
             artifacts/netcoredbg-windows-x64/netcoredbg-windows-x64.zip
-            artifacts/netcoredbg-windows-x86/netcoredbg-windows-x86.zip
-            artifacts/netcoredbg-windows-arm64/netcoredbg-windows-arm64.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
