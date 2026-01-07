@@ -26,7 +26,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - arch: x64
+          - arch: amd64
             runner: ubuntu-latest
           - arch: arm64
             runner: ubuntu-24.04-arm
@@ -76,7 +76,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - arch: x64
+          - arch: amd64
             runner: macos-15-intel
           - arch: arm64
             runner: macos-15
@@ -150,13 +150,13 @@ jobs:
       - name: Package artifacts
         run: |
           cd bin
-          Compress-Archive -Path * -DestinationPath ../netcoredbg-windows-x64.zip
+          Compress-Archive -Path * -DestinationPath ../netcoredbg-windows-win64.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: netcoredbg-windows-x64
-          path: netcoredbg-windows-x64.zip
+          name: netcoredbg-windows-win64
+          path: netcoredbg-windows-win64.zip
 
   create-release:
     name: Create Release
@@ -196,10 +196,10 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            artifacts/netcoredbg-linux-x64/netcoredbg-linux-x64.tar.gz
+            artifacts/netcoredbg-linux-amd64/netcoredbg-linux-amd64.tar.gz
             artifacts/netcoredbg-linux-arm64/netcoredbg-linux-arm64.tar.gz
-            artifacts/netcoredbg-macos-x64/netcoredbg-macos-x64.tar.gz
+            artifacts/netcoredbg-macos-amd64/netcoredbg-macos-amd64.tar.gz
             artifacts/netcoredbg-macos-arm64/netcoredbg-macos-arm64.tar.gz
-            artifacts/netcoredbg-windows-x64/netcoredbg-windows-x64.zip
+            artifacts/netcoredbg-windows-win64/netcoredbg-windows-win64.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
