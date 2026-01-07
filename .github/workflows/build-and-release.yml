@@ -26,7 +26,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - arch: amd64
+          - arch: x86
             runner: ubuntu-latest
           - arch: arm64
             runner: ubuntu-24.04-arm
@@ -76,7 +76,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - arch: amd64
+          - arch: x86
             runner: macos-15-intel
           - arch: arm64
             runner: macos-15
@@ -196,9 +196,9 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            artifacts/netcoredbg-linux-amd64/netcoredbg-linux-amd64.tar.gz
+            artifacts/netcoredbg-linux-x86/netcoredbg-linux-x86.tar.gz
             artifacts/netcoredbg-linux-arm64/netcoredbg-linux-arm64.tar.gz
-            artifacts/netcoredbg-macos-amd64/netcoredbg-macos-amd64.tar.gz
+            artifacts/netcoredbg-macos-x86/netcoredbg-macos-x86.tar.gz
             artifacts/netcoredbg-macos-arm64/netcoredbg-macos-arm64.tar.gz
             artifacts/netcoredbg-windows-win64/netcoredbg-windows-win64.zip
         env:
